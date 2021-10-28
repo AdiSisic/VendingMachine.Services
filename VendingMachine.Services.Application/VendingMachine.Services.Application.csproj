@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net5.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="AutoMapper" Version="10.1.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\VendingMachine.Services.Api\VendingMachine.Services.Api.csproj" />
+    <ProjectReference Include="..\VendingMachine.Services.Application.Abstractions\VendingMachine.Services.Application.Abstractions.csproj" />
+  </ItemGroup>
+
+</Project>
