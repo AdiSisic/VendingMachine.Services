@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -36,26 +37,28 @@ namespace VendingMachine.Services
         {
             services.AddControllers();
 
-            services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
-                    .AddCookie();
-            //services
-            //    .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-            //    .AddCookie(options => options.SlidingExpiration = true)
-            //    .AddJwtBearer(options =>
-            //    {
-            //        options.SaveToken = true;
-            //        options.TokenValidationParameters = new TokenValidationParameters
-            //        {
-            //            ValidateIssuerSigningKey = true,
-            //            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Configuration.GetValue<string>("Token:Key"))),
-            //            ValidateIssuer = false,
-            //            ValidateAudience = false,
-            //            ValidateLifetime = true,
-            //            RequireExpirationTime = true,
-            //            ClockSkew = TimeSpan.FromSeconds(Configuration.GetValue<int>("Token:SecondsValid"))
-            //        };
-            //    });
+            services
+                .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+                .AddCookie(options => options.SlidingExpiration = true)
+                .AddJwtBearer(options =>
+                {
+                    options.SaveToken = true;
+                    options.RequireHttpsMetadata = false;
+                    options.TokenValidationParameters = new TokenValidationParameters()
+                    {
+                        ValidateLifetime = true,
+                        ValidateIssuer = true,
+                        ValidateAudience = true,
+                        ValidateIssuerSigningKey = true,
 
+                        ValidIssuer = "http://localhost:30725",
+                        ValidAudience = "http://localhost:30725",
+                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Configuration.GetValue<string>("Token:Issuer"))),
+
+                    };
+                });
+                
+            
             RegisterDatabase(services);
             RegisterMapper(services);
             RegisterRepositories(services);
@@ -126,6 +129,7 @@ namespace VendingMachine.Services
 
         private void RegisterBlls(IServiceCollection services)
         {
+            services.AddTransient<ITokenService, TokenService>();
             services.AddTransient<IUserService, UserService>();
         }
 

@@ -1,12 +1,16 @@
 ﻿using AutoMapper;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
+using Microsoft.IdentityModel.Tokens;
 using System;
 using System.Collections.Generic;
+using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using System.Text;
 using System.Threading.Tasks;
 using VendingMachine.Services.Api.Base;
 using VendingMachine.Services.Api.User.Request;
@@ -25,16 +29,16 @@ namespace VendingMachine.Services.Controllers
 
         private readonly IMapper _mapper;
         private readonly IUserService _userService;
-        private readonly IConfiguration _configuration;
+        private readonly ITokenService _tokenService;
 
         #endregion << Fields >>
 
         #region << Constructor >>
 
-        public UserController(IMapper mapper, IConfiguration configuration, IUserService userService)
+        public UserController(IMapper mapper, ITokenService tokenService, IUserService userService)
         {
             _mapper = mapper;
-            _configuration = configuration;
+            _tokenService = tokenService;
             _userService = userService;
         }
 
@@ -56,12 +60,7 @@ namespace VendingMachine.Services.Controllers
             var user = _mapper.Map<RegisterRequest, User>(request);
             return await _userService.Register(user);
         }
-        
-        /// <summary>
-        /// Login for Existing User
-        /// </summary>
-        /// <param name="request"></param>
-        /// <returns></returns>
+
         [HttpPost, Route("login", Name = "Login")]
         public async Task<BaseResponse<LoginResponse>> Login([FromBody] LoginRequest request)
         {
@@ -77,23 +76,7 @@ namespace VendingMachine.Services.Controllers
             if (loginResponse.Success)
             {
                 response.Data = _mapper.Map<User, LoginResponse>(loginResponse.Data);
-
-                var claims = new List<Claim>
-                {
-                    new Claim(ClaimTypes.Name, loginResponse.Data.Username),
-                    new Claim(ClaimTypes.Role, loginResponse.Data.Role.ToString()),
-                };
-
-                var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
-                var authProperties = new AuthenticationProperties
-                {
-                    IssuedUtc = DateTime.UtcNow,
-                    ExpiresUtc = request.KeepLogged ? DateTime.UtcNow.AddDays(15) : DateTime.UtcNow.AddSeconds(_configuration.GetValue<int>("Token:ExpirationInSeconds")),
-                    AllowRefresh = _configuration.GetValue<bool>("Token:Refresh"),
-                    IsPersistent = request.KeepLogged
-                };
-
-                await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(claimsIdentity), authProperties);
+                response.Data.Token = _tokenService.CreateToken(loginResponse.Data);
             }
 
             return response;
@@ -107,7 +90,8 @@ namespace VendingMachine.Services.Controllers
         [HttpPost, Route("logout", Name = "Logout")]
         public async Task<IActionResult> Logout()
         {
-            await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+            var user = HttpContext.User;
+            //await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
 
             return Ok();
         }
@@ -116,6 +100,7 @@ namespace VendingMachine.Services.Controllers
         [HttpGet, Route("authorizeTest", Name = "authorizeTest")]
         public async Task<string> AuthorizedTest()
         {
+            var user = HttpContext.User;
             return "authorized";
         }
     }
