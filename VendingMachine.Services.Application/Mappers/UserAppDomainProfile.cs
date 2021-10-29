@@ -7,7 +7,8 @@ namespace VendingMachine.Services.Application.Mappers
         public UserAppDomainProfile()
         {
             CreateMap<Models.User, Domain.User>()
-                .ForMember(dest => dest.RoleId, opts=> opts.MapFrom(src => src.Role)
+                .ForMember(dest => dest.RoleId, opts => opts.MapFrom(src => (int)src.Role))
+                .ReverseMap();
         }
     }
 }

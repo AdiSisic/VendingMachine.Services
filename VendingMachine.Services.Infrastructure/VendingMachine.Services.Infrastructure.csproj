@@ -14,4 +14,8 @@
     <ProjectReference Include="..\VendingMachine.Services.Application.Abstractions\VendingMachine.Services.Application.Abstractions.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="EFDbContext\" />
+  </ItemGroup>
+
 </Project>

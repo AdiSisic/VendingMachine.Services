@@ -2,7 +2,7 @@
 
 namespace VendingMachine.Services.Api.User.Request
 {
-    public class CreateUserRequest
+    public class RegisterRequest
     {
         public string Username { get; set; }
         public string Password { get; set; }
