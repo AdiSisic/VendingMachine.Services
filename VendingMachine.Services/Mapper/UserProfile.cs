@@ -6,12 +6,12 @@ using VendingMachine.Services.Application.Models;
 
 namespace VendingMachine.Services.Mapper
 {
-    public class UserApiProfile : Profile
+    public class UserProfile : Profile
     {
-        public UserApiProfile()
+        public UserProfile()
         {
-            CreateMap<RegisterRequest, User>();
-            CreateMap<User, LoginResponse>();
+            CreateMap<CreateMemberRequest, User>();
+            CreateMap<User, LoginMemberResponse>();
         }
     }
 }

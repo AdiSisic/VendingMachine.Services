@@ -6,7 +6,7 @@ using VendingMachine.Services.Infrastructure.EFDbContext;
 
 namespace VendingMachine.Services.Infrastructure
 {
-    public class UserRepository : IUserRepository
+    public class ProductRepository : IProductRepository
     {
         #region << Fields >>
 
@@ -16,7 +16,7 @@ namespace VendingMachine.Services.Infrastructure
 
         #region << Constructors >>
 
-        public UserRepository(VendingMachineContext context)
+        public ProductRepository(VendingMachineContext context)
         {
             _context = context;
         }
@@ -25,32 +25,27 @@ namespace VendingMachine.Services.Infrastructure
 
         #region << Public Methods >>
 
-        public async Task<User> CreateUserAsync(User user)
+        public async Task<Product> CreateProductAsync(Product product)
         {
-            await _context.Users.AddAsync(user);
+            await _context.Products.AddAsync(product);
             await _context.SaveChangesAsync();
 
-            return user;
+            return product;
         }
 
-        public async Task<bool> UserExitsAsync(string username)
+        public async Task<bool> ProductAvailableForSellerAsync(string productName, int sellerId)
         {
-            return await _context.Users.AnyAsync(x => x.Username == username);
+            return await _context.Products.AnyAsync(x => x.Name == productName && x.SellerId == sellerId);
         }
 
-        public async Task<User> GetUserAsync(string username)
+        public async Task<Product> GetProductAsync(int productId)
         {
-            return await _context.Users.SingleOrDefaultAsync(x => x.Username == username);
+            return await _context.Products.FirstOrDefaultAsync(x => x.Id == productId);
         }
 
-        public async Task<User> GetUserAsync(int userId)
+        public async Task DeleteProductAsync(Product product)
         {
-            return await _context.Users.SingleOrDefaultAsync(x => x.Id == userId);
-        }
-
-        public async Task DeleteUserAsync(User user)
-        {
-            _context.Users.Remove(user);
+            _context.Products.Remove(product);
             await _context.SaveChangesAsync();
         }
 

@@ -124,4 +124,7 @@
     <Build Include="dbo\Tables\User.sql" />
     <Build Include="dbo\Tables\Product.sql" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="Notes.txt" />
+  </ItemGroup>
 </Project>

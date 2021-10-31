@@ -24,6 +24,20 @@ namespace VendingMachine.Services.Application.Abstractions.Repositories
         /// </summary>
         /// <param name="username">Username</param>
         /// <returns></returns>
-        Task<User> GetUser(string username);
+        Task<User> GetUserAsync(string username);
+
+        /// <summary>
+        /// Get user by user Id
+        /// </summary>
+        /// <param name="userId">User Id</param>
+        /// <returns></returns>
+        Task<User> GetUserAsync(int userId);
+
+        /// <summary>
+        /// Delete provided user
+        /// </summary>
+        /// <param name="user">User</param>
+        /// <returns></returns>
+        Task DeleteUserAsync(User user);
     }
 }

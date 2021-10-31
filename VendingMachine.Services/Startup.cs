@@ -3,15 +3,12 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
-using System;
 using System.Text;
 using VendingMachine.Services.Application;
 using VendingMachine.Services.Application.Abstractions;
@@ -35,7 +32,15 @@ namespace VendingMachine.Services
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddControllers();
+            services.AddCors(options =>
+            {
+                options.AddPolicy("AllowedOrigins", builder =>
+                {
+                    builder.WithOrigins("http://localhost:4200", "http://localhost:4200/").AllowAnyHeader().AllowAnyMethod().AllowCredentials();
+                });
+            });
+
+            services.AddControllers().AddNewtonsoftJson();
 
             services
                 .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -57,8 +62,7 @@ namespace VendingMachine.Services
 
                     };
                 });
-                
-            
+
             RegisterDatabase(services);
             RegisterMapper(services);
             RegisterRepositories(services);
@@ -101,36 +105,35 @@ namespace VendingMachine.Services
                 app.UseSwagger();
                 app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "VendingMachine.Services v1"));
             }
-
-            app.UseHttpsRedirection();
+            app.UseCors("AllowedOrigins");
 
             app.UseRouting();
-
-            app.UseAuthentication();
-
             app.UseAuthorization();
-
-            app.UseEndpoints(endpoints =>
-            {
-                endpoints.MapControllers();
-            });
+            app.UseAuthentication();
+            app.UseHttpsRedirection();
+            app.UseEndpoints(endpoints => { endpoints.MapControllers(); });
         }
 
         private void RegisterMapper(IServiceCollection services)
         {
-            services.AddAutoMapper(typeof(UserApiProfile));
-            services.AddAutoMapper(typeof(UserAppDomainProfile));
+            services.AddAutoMapper(typeof(Mapper.UserProfile));
+            services.AddAutoMapper(typeof(Application.Mappers.UserProfile));
+            services.AddAutoMapper(typeof(Mapper.ProductProfile));
+            services.AddAutoMapper(typeof(Application.Mappers.ProductProfile));
         }
 
         private void RegisterRepositories(IServiceCollection services)
         {
             services.AddTransient<IUserRepository, UserRepository>();
+            services.AddTransient<IProductRepository, ProductRepository>();
         }
 
         private void RegisterBlls(IServiceCollection services)
         {
             services.AddTransient<ITokenService, TokenService>();
             services.AddTransient<IUserService, UserService>();
+            services.AddTransient<IMemberService, MemberService>();
+            services.AddTransient<IProductService, ProductService>();
         }
 
         private void RegisterDatabase(IServiceCollection services)
