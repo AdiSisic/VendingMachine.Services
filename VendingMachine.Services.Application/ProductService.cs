@@ -60,7 +60,8 @@ namespace VendingMachine.Services.Application
             }
             catch(Exception)
             {
-
+                // TODO: CREATE LOG
+                response.Success = false;
             }
 
             return response;
@@ -91,6 +92,25 @@ namespace VendingMachine.Services.Application
             return response;
         }
 
+        public async Task<BaseResponse<IEnumerable<AppModels.Product>>> GetProductsAsync()
+        {
+            BaseResponse<IEnumerable<AppModels.Product>> response = new();
+
+            try
+            {
+                var dbProducts = await _productRepository.GetProductsAsync();
+                response.Data = _mapper.Map<IEnumerable<DomainModels.Product>, IEnumerable<AppModels.Product>>(dbProducts);
+                response.Success = true;
+            }
+            catch (Exception)
+            {
+                // TODO: CREATE LOG
+                response.Success = false;
+            }
+
+            return response;
+        }
+
         public async Task<BaseResponse<AppModels.Product>> GetProductAsync(int productId)
         {
             BaseResponse<AppModels.Product> response = new();
@@ -111,6 +131,7 @@ namespace VendingMachine.Services.Application
             catch (Exception)
             {
                 // TODO: CREATE LOG
+                response.Success = false;
             }
 
             return response;
@@ -143,7 +164,8 @@ namespace VendingMachine.Services.Application
             }
             catch(Exception)
             {
-                //TODO: CREATE LOG
+                 // TODO: CREATE LOG
+                response.Success = false;
             }
 
             return response;
@@ -176,7 +198,8 @@ namespace VendingMachine.Services.Application
             }
             catch(Exception)
             {
-
+                // TODO: CREATE LOG
+                response.Success = false;
             }
 
             return response;

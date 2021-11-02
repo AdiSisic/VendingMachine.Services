@@ -48,5 +48,11 @@ namespace VendingMachine.Services.Application.Abstractions.Repositories
         /// <param name="product">Product</param>
         /// <returns></returns>
         Task UpdateProductAsync(Product product);
+
+        /// <summary>
+        /// Get products
+        /// </summary>
+        /// <returns></returns>
+        Task<IEnumerable<Product>> GetProductsAsync();
     }
 }

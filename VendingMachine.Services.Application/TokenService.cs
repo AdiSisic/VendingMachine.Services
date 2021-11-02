@@ -14,7 +14,7 @@ namespace VendingMachine.Services.Application
     {
         private readonly string _issuer;
         private readonly string _audience;
-        private readonly int _expirationInSeconds;
+        private readonly int _expirationInMinutes;
         private readonly SymmetricSecurityKey _key;
 
         public TokenService(IConfiguration configuration)
@@ -23,7 +23,7 @@ namespace VendingMachine.Services.Application
             _audience = configuration.GetSection("Token")["Audience"];
             _key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_issuer));
 
-            int.TryParse(configuration.GetSection("Token")["ExpirationInSeconds"], out _expirationInSeconds);
+            int.TryParse(configuration.GetSection("Token")["ExpirationInMinutes"], out _expirationInMinutes);
         }
 
         public string CreateToken(User user)
@@ -38,7 +38,7 @@ namespace VendingMachine.Services.Application
             var tokenOptions = new JwtSecurityToken(issuer: _issuer,
                                                     audience: _audience,
                                                     claims: claims,
-                                                    expires: DateTime.Now.AddMinutes(_expirationInSeconds),
+                                                    expires: DateTime.Now.AddMinutes(_expirationInMinutes),
                                                     signingCredentials: new SigningCredentials(_key, SecurityAlgorithms.HmacSha256));
 
             return new JwtSecurityTokenHandler().WriteToken(tokenOptions);

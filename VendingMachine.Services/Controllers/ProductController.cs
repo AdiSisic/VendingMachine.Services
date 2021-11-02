@@ -16,7 +16,7 @@ using VendingMachine.Services.Attributes;
 namespace VendingMachine.Services.Controllers
 {
     [Route("api/[controller]")]
-    [ApiController, YwtAuthorization]
+    [ApiController]
     public class ProductController : ControllerBase
     {
         #region << Fields >>
@@ -41,7 +41,7 @@ namespace VendingMachine.Services.Controllers
         /// </summary>
         /// <param name="request">Create Product request</param>
         /// <returns></returns>
-        [HttpPost, Route("createProduct", Name = "CreateProduct")]
+        [HttpPost, Route("createProduct", Name = "CreateProduct"), YwtAuthorization]
         public async Task<BaseResponse<CreateProductResponse>> CreateProduct([FromBody] ManipulateProductRequest request)
         {
             if (!ModelState.IsValid)
@@ -71,7 +71,7 @@ namespace VendingMachine.Services.Controllers
         /// This method returns all seller products
         /// </summary>
         /// <returns></returns>
-        [HttpGet, Route("getSellerProducts", Name = "GetSellerProducts")]
+        [HttpGet, Route("getSellerProducts", Name = "GetSellerProducts"), YwtAuthorization]
         public async Task<BaseResponse<IEnumerable<GetProductResponse>>> GetSellerProducts()
         {
             var claimSellerId = User.Claims.Where(x => x.Type == "UserId").Select(x => x.Value).FirstOrDefault();
@@ -94,11 +94,29 @@ namespace VendingMachine.Services.Controllers
         }
 
         /// <summary>
+        /// Get products
+        /// </summary>
+        /// <returns></returns>
+        [HttpGet, Route("getProducts", Name ="GetProducts")]
+        public async Task<BaseResponse<IEnumerable<GetProductResponse>>> GetProducts()
+        {
+            var serviceResponse = await _productService.GetProductsAsync();
+            BaseResponse<IEnumerable<GetProductResponse>> response = new() { Success = serviceResponse.Success, Message = serviceResponse.Message };
+
+            if (response.Success)
+            {
+                response.Data = _mapper.Map<IEnumerable<Product>, IEnumerable<GetProductResponse>>(serviceResponse.Data);
+            }
+
+            return response;
+        }
+
+        /// <summary>
         /// Get Product by Product ID
         /// </summary>
         /// <param name="productId">Product ID</param>
         /// <returns></returns>
-        [HttpGet, Route("{productId}", Name = "GetProduct"), AllowAnonymous]
+        [HttpGet, Route("{productId}", Name = "GetProduct")]
         public async Task<BaseResponse<GetProductResponse>> GetProduct([FromRoute] int productId)
         {
             if(productId <= 0)
@@ -122,7 +140,7 @@ namespace VendingMachine.Services.Controllers
         /// </summary>
         /// <param name="productId">Product Id</param>
         /// <returns></returns>
-        [HttpDelete, Route("deleteProduct/{productId}", Name = "DeleteProduct")]
+        [HttpDelete, Route("deleteProduct/{productId}", Name = "DeleteProduct"), YwtAuthorization]
         public async Task<BaseResponse<bool>> DeleteProduct([FromRoute] int productId)
         {
             if(productId <= 0)
@@ -142,7 +160,7 @@ namespace VendingMachine.Services.Controllers
         /// <param name="productId">Product Id</param>
         /// <param name="request">Request parameters</param>
         /// <returns></returns>
-        [HttpPut, Route("updateProduct/{productId}", Name = "UpdateProduct")]
+        [HttpPut, Route("updateProduct/{productId}", Name = "UpdateProduct"), YwtAuthorization]
         public async Task<BaseResponse<bool>> UpdateProduct([FromRoute] int productId, [FromBody] ManipulateProductRequest request)
         {
             if(productId <= 0 || !ModelState.IsValid && request.Amount >= 0)

@@ -37,6 +37,12 @@ namespace VendingMachine.Services.Application.Abstractions
         Task<BaseResponse<IEnumerable<Product>>> GetSellerProductsAsync(int sellerId);
 
         /// <summary>
+        /// Get all products
+        /// </summary>
+        /// <returns></returns>
+        Task<BaseResponse<IEnumerable<Product>>> GetProductsAsync();
+
+        /// <summary>
         /// Update existing product
         /// </summary>
         /// <param name="product">Product for update</param>

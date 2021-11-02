@@ -50,6 +50,11 @@ namespace VendingMachine.Services.Infrastructure
             return await _context.Products.Where(x => x.SellerId == sellerId).ToListAsync();
         }
 
+        public async Task<IEnumerable<Product>>GetProductsAsync()
+        {
+            return await _context.Products.Where(x => x.Amount > 0).ToListAsync();
+        }
+
         public async Task DeleteProductAsync(Product product)
         {
             _context.Products.Remove(product);
