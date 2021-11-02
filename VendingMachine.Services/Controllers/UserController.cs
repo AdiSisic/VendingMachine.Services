@@ -6,11 +6,12 @@ using VendingMachine.Services.Api.Base;
 using VendingMachine.Services.Api.User.Response;
 using VendingMachine.Services.Application.Abstractions;
 using VendingMachine.Services.Application.Models;
+using VendingMachine.Services.Attributes;
 
 namespace VendingMachine.Services.Controllers
 {
     [Route("api/[controller]")]
-    [Authorize, ApiController]
+    [ApiController, YwtAuthorization]
     public class UserController : ControllerBase
     {
         #region << Fields >>

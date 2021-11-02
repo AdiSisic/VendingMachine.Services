@@ -1,4 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using VendingMachine.Services.Application.Abstractions.Repositories;
 using VendingMachine.Services.Domain;
@@ -43,9 +45,20 @@ namespace VendingMachine.Services.Infrastructure
             return await _context.Products.FirstOrDefaultAsync(x => x.Id == productId);
         }
 
+        public async Task<IEnumerable<Product>> GetSellerProductsAsync(int sellerId)
+        {
+            return await _context.Products.Where(x => x.SellerId == sellerId).ToListAsync();
+        }
+
         public async Task DeleteProductAsync(Product product)
         {
             _context.Products.Remove(product);
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task UpdateProductAsync(Product product)
+        {
+            _context.Products.Update(product);
             await _context.SaveChangesAsync();
         }
 

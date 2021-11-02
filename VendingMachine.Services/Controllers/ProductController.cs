@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using VendingMachine.Services.Api.Base;
@@ -10,11 +11,12 @@ using VendingMachine.Services.Api.Product.Request;
 using VendingMachine.Services.Api.Product.Response;
 using VendingMachine.Services.Application.Abstractions;
 using VendingMachine.Services.Application.Models;
+using VendingMachine.Services.Attributes;
 
 namespace VendingMachine.Services.Controllers
 {
     [Route("api/[controller]")]
-    [ApiController, Authorize]
+    [ApiController, YwtAuthorization]
     public class ProductController : ControllerBase
     {
         #region << Fields >>
@@ -40,17 +42,17 @@ namespace VendingMachine.Services.Controllers
         /// <param name="request">Create Product request</param>
         /// <returns></returns>
         [HttpPost, Route("createProduct", Name = "CreateProduct")]
-        public async Task<BaseResponse<CreateProductResponse>> CreateProduct([FromBody] CreateProductRequest request)
+        public async Task<BaseResponse<CreateProductResponse>> CreateProduct([FromBody] ManipulateProductRequest request)
         {
             if (!ModelState.IsValid)
             {
                 return new BaseResponse<CreateProductResponse>() { Message = "Bad Request" };
             }
 
-            var claimUserId = User.Claims.Where(x => x.Type == "UserId").Select(x => x.Value).ToString();
+            var claimUserId = User.Claims.Where(x => x.Type == "UserId").Select(x => x.Value).FirstOrDefault();
             Int32.TryParse(claimUserId, out int userId);
 
-            var product = _mapper.Map<CreateProductRequest, Product>(request);
+            var product = _mapper.Map<ManipulateProductRequest, Product>(request);
             product.SellerId = userId;
 
             var serivceResponse = await _productService.CreateProductAsync(product);
@@ -60,6 +62,32 @@ namespace VendingMachine.Services.Controllers
             if(response.Success)
             {
                 response.Data = _mapper.Map<Product, CreateProductResponse>(product);
+            }
+
+            return response;
+        }
+
+        /// <summary>
+        /// This method returns all seller products
+        /// </summary>
+        /// <returns></returns>
+        [HttpGet, Route("getSellerProducts", Name = "GetSellerProducts")]
+        public async Task<BaseResponse<IEnumerable<GetProductResponse>>> GetSellerProducts()
+        {
+            var claimSellerId = User.Claims.Where(x => x.Type == "UserId").Select(x => x.Value).FirstOrDefault();
+            Int32.TryParse(claimSellerId, out int sellerId);
+
+            if (sellerId <= 0)
+            {
+                return new BaseResponse<IEnumerable<GetProductResponse>> { Message = "Bad Request" };
+            }
+
+            var serviceResponse = await _productService.GetSellerProductsAsync(sellerId);
+            BaseResponse<IEnumerable<GetProductResponse>> response = new() { Success = serviceResponse.Success, Message = serviceResponse.Message };
+
+            if (response.Success)
+            {
+                response.Data = _mapper.Map<IEnumerable<Product>, IEnumerable<GetProductResponse>>(serviceResponse.Data);
             }
 
             return response;
@@ -89,7 +117,12 @@ namespace VendingMachine.Services.Controllers
             return response;
         }
 
-        [HttpDelete, Route("{productId}", Name = "DeleteProduct")]
+        /// <summary>
+        /// Delete Product
+        /// </summary>
+        /// <param name="productId">Product Id</param>
+        /// <returns></returns>
+        [HttpDelete, Route("deleteProduct/{productId}", Name = "DeleteProduct")]
         public async Task<BaseResponse<bool>> DeleteProduct([FromRoute] int productId)
         {
             if(productId <= 0)
@@ -97,10 +130,34 @@ namespace VendingMachine.Services.Controllers
                 return new BaseResponse<bool>() { Message = "Bad Request" };
             }
 
-            var claimUserId = User.Claims.Where(x => x.Type == "UserId").Select(x => x.Value).ToString();
+            var claimUserId = User.Claims.Where(x => x.Type == "UserId").Select(x => x.Value).FirstOrDefault();
             Int32.TryParse(claimUserId, out int userId);
 
             return await _productService.DeleteProductAsync(productId, userId);
+        }
+
+        /// <summary>
+        /// Update existing product
+        /// </summary>
+        /// <param name="productId">Product Id</param>
+        /// <param name="request">Request parameters</param>
+        /// <returns></returns>
+        [HttpPut, Route("updateProduct/{productId}", Name = "UpdateProduct")]
+        public async Task<BaseResponse<bool>> UpdateProduct([FromRoute] int productId, [FromBody] ManipulateProductRequest request)
+        {
+            if(productId <= 0 || !ModelState.IsValid && request.Amount >= 0)
+            {
+                return new BaseResponse<bool>() { Message = "Bad Request" };
+            }
+
+            var claimUserId = User.Claims.Where(x => x.Type == "UserId").Select(x => x.Value).FirstOrDefault();
+            Int32.TryParse(claimUserId, out int userId);
+
+            var product = _mapper.Map<ManipulateProductRequest, Product>(request);
+            product.Id = productId;
+            product.SellerId = userId;
+
+            return await _productService.UpdateProductAsync(product);
         }
     }
 }

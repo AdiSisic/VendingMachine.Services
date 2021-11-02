@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System.Collections.Generic;
+using System.Threading.Tasks;
 using VendingMachine.Services.Api.Base;
 using VendingMachine.Services.Application.Models;
 
@@ -27,5 +28,19 @@ namespace VendingMachine.Services.Application.Abstractions
         /// <param name="userId">User Id</param>
         /// <returns></returns>
         Task<BaseResponse<bool>> DeleteProductAsync(int productId, int userId);
+
+        /// <summary>
+        /// Returns all seller products
+        /// </summary>
+        /// <param name="sellerId">Seller ID</param>
+        /// <returns></returns>
+        Task<BaseResponse<IEnumerable<Product>>> GetSellerProductsAsync(int sellerId);
+
+        /// <summary>
+        /// Update existing product
+        /// </summary>
+        /// <param name="product">Product for update</param>
+        /// <returns></returns>
+        Task<BaseResponse<bool>> UpdateProductAsync(Product product);
     }
 }

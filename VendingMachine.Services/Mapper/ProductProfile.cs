@@ -10,9 +10,10 @@ namespace VendingMachine.Services.Mapper
     {
         public ProductProfile()
         {
-            CreateMap<CreateProductRequest, Product>();
-            CreateMap<CreateProductResponse, Product>();
+            CreateMap<ManipulateProductRequest, Product>();
+            CreateMap<Product, CreateProductResponse>();
             CreateMap<GetProductResponse, Product>();
+            CreateMap<Product, GetProductResponse>();
         }
     }
 }

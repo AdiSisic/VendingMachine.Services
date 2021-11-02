@@ -56,8 +56,8 @@ namespace VendingMachine.Services
                         ValidateAudience = true,
                         ValidateIssuerSigningKey = true,
 
-                        ValidIssuer = "http://localhost:30725",
-                        ValidAudience = "http://localhost:30725",
+                        ValidIssuer = Configuration.GetValue<string>("Token:Issuer"),
+                        ValidAudience = Configuration.GetValue<string>("Token:Audience"),
                         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Configuration.GetValue<string>("Token:Issuer"))),
 
                     };

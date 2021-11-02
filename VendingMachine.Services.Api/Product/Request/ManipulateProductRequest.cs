@@ -2,7 +2,7 @@
 
 namespace VendingMachine.Services.Api.Product.Request
 {
-    public class CreateProductRequest
+    public class ManipulateProductRequest
     {
         [Required]
         public string Name { get; set; }

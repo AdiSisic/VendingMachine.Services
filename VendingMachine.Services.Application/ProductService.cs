@@ -1,5 +1,7 @@
 ﻿using AutoMapper;
 using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using VendingMachine.Services.Api.Base;
 using VendingMachine.Services.Application.Abstractions;
@@ -38,36 +40,52 @@ namespace VendingMachine.Services.Application
             try
             {
                 response = await CreateProductValidationAsync(product);
-                if(String.IsNullOrWhiteSpace(response.Message))
+                if (String.IsNullOrWhiteSpace(response.Message))
                 {
-                    // Check if seller already has same product
-                    var productExists = await _productRepository.ProductAvailableForSellerAsync(product.Name, product.SellerId);
-                    if(productExists)
+                    // Add new product
+                    var newProduct = _mapper.Map<AppModels.Product, Domain.Product>(product);
+                    var dbProduct = await _productRepository.CreateProductAsync(newProduct);
+
+                    // Validate new product creation
+                    if (dbProduct == null)
                     {
-                        response.Message = "Seller already has Product with same name";
+                        response.Message = "Product could not be created. for more help contact or support";
                     }
                     else
                     {
-                        // Add new product
-                        var newProduct = _mapper.Map<AppModels.Product, Domain.Product>(product);
-                        var dbProduct = await _productRepository.CreateProductAsync(newProduct);
-
-                        // Validate new product creation
-                        if(dbProduct == null)
-                        {
-                            response.Message = "Product could not be created. for more help contact or support";
-                        }
-                        else
-                        {
-                            response.Data = _mapper.Map<DomainModels.Product, AppModels.Product>(dbProduct);
-                            response.Success = true;
-                        }
+                        response.Data = _mapper.Map<DomainModels.Product, AppModels.Product>(dbProduct);
+                        response.Success = true;
                     }
                 }
             }
             catch(Exception)
             {
 
+            }
+
+            return response;
+        }
+
+        public async Task<BaseResponse<IEnumerable<AppModels.Product>>> GetSellerProductsAsync(int sellerId)
+        {
+            BaseResponse<IEnumerable<AppModels.Product>> response = new();
+
+            if (sellerId <= 0)
+            {
+                response.Message = "Invalid Seller Id";
+            }
+            else
+            {
+                try
+                {
+                    var dbProducts = await _productRepository.GetSellerProductsAsync(sellerId);
+                    response.Data = _mapper.Map<IEnumerable<DomainModels.Product>, IEnumerable<AppModels.Product>>(dbProducts);
+                    response.Success = true;
+                }
+                catch (Exception)
+                {
+                    // TODO: CREATE LOG
+                }
             }
 
             return response;
@@ -131,6 +149,39 @@ namespace VendingMachine.Services.Application
             return response;
         }
 
+        public async Task<BaseResponse<bool>> UpdateProductAsync(AppModels.Product product)
+        {
+            BaseResponse<bool> response = new();
+
+            try
+            {
+                var dbProduct = await _productRepository.GetProductAsync(product.Id);
+
+                if(dbProduct == null)
+                {
+                    response.Message = "Invalid Product Id";
+                }
+                else if(dbProduct.SellerId != product.SellerId)
+                {
+                    response.Message = "Unauthorized update";
+                }
+                else
+                {
+                    _mapper.Map(product, dbProduct);
+                    await _productRepository.UpdateProductAsync(dbProduct);
+
+                    response.Data = true;
+                    response.Success = true;
+                }
+            }
+            catch(Exception)
+            {
+
+            }
+
+            return response;
+        }
+
         #endregion << Public Methods >>
 
         #region << Private Methods >>
@@ -167,6 +218,12 @@ namespace VendingMachine.Services.Application
             {
                 response.Message = "Amount has not been provided";
                 return response;
+            }
+
+            var productExists = await _productRepository.ProductAvailableForSellerAsync(product.Name, product.SellerId);
+            if (productExists)
+            {
+                response.Message = "Seller already has Product with same name";
             }
 
             return response;

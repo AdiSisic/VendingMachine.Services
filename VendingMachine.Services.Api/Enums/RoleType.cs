@@ -1,6 +1,6 @@
 ﻿namespace VendingMachine.Services.Api.Enums
 {
-    public enum Role
+    public enum RoleType
     {
         Buyer = 0,
         Seller = 1

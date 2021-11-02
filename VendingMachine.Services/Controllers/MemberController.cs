@@ -8,6 +8,7 @@ using VendingMachine.Services.Api.User.Requests;
 using VendingMachine.Services.Api.User.Response;
 using VendingMachine.Services.Application.Abstractions;
 using VendingMachine.Services.Application.Models;
+using VendingMachine.Services.Attributes;
 
 namespace VendingMachine.Services.Controllers
 {
@@ -82,7 +83,7 @@ namespace VendingMachine.Services.Controllers
         /// </summary>
         /// <param name="memberId">User Id</param>
         /// <returns></returns>
-        [HttpDelete, Route("{memberId}", Name = "DeleteMember"), Authorize]
+        [HttpDelete, Route("{memberId}", Name = "DeleteMember"), YwtAuthorization]
         public async Task<BaseResponse<bool>> DeleteMember([FromRoute] int memberId)
         {
             if(memberId <= 0)

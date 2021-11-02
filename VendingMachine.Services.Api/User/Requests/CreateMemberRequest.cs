@@ -12,6 +12,6 @@ namespace VendingMachine.Services.Api.User.Request
         public string Password { get; set; }
 
         [Required]
-        public Role Role { get; set; }
+        public RoleType Role { get; set; }
     }
 }

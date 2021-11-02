@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System.Collections.Generic;
+using System.Threading.Tasks;
 using VendingMachine.Services.Domain;
 
 namespace VendingMachine.Services.Application.Abstractions.Repositories
@@ -33,5 +34,19 @@ namespace VendingMachine.Services.Application.Abstractions.Repositories
         /// <param name="product">Product</param>
         /// <returns></returns>
         Task DeleteProductAsync(Product product);
+
+        /// <summary>
+        /// Returns all Seller products
+        /// </summary>
+        /// <param name="sellerId">Seller ID</param>
+        /// <returns></returns>
+        Task<IEnumerable<Product>> GetSellerProductsAsync(int sellerId);
+
+        /// <summary>
+        /// Update Product
+        /// </summary>
+        /// <param name="product">Product</param>
+        /// <returns></returns>
+        Task UpdateProductAsync(Product product);
     }
 }
