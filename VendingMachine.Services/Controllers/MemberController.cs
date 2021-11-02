@@ -83,7 +83,7 @@ namespace VendingMachine.Services.Controllers
         /// </summary>
         /// <param name="memberId">User Id</param>
         /// <returns></returns>
-        [HttpDelete, Route("{memberId}", Name = "DeleteMember"), YwtAuthorization]
+        [HttpDelete, Route("{memberId}", Name = "DeleteMember"), JwtAuthorization]
         public async Task<BaseResponse<bool>> DeleteMember([FromRoute] int memberId)
         {
             if(memberId <= 0)

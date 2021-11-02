@@ -6,7 +6,7 @@ using System;
 namespace VendingMachine.Services.Attributes
 {
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method)]
-    public class YwtAuthorization : Attribute, IAuthorizationFilter
+    public class JwtAuthorization : Attribute, IAuthorizationFilter
     {
         public void OnAuthorization(AuthorizationFilterContext context)
         {

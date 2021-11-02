@@ -1,7 +1,9 @@
 ﻿using AutoMapper;
+using Microsoft.Extensions.Configuration;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using VendingMachine.Services.Api.Base;
 using VendingMachine.Services.Application.Abstractions;
@@ -17,15 +19,17 @@ namespace VendingMachine.Services.Application
         #region << Fields >>
 
         private readonly IMapper _mapper;
+        private readonly IConfiguration _configuration;
         private readonly IProductRepository _productRepository;
 
         #endregion << Fields >>
 
         #region << Constructors >>
 
-        public ProductService(IMapper mapper, IProductRepository productRepository)
+        public ProductService(IMapper mapper, IConfiguration configuration, IProductRepository productRepository)
         {
             _mapper = mapper;
+            _configuration = configuration;
             _productRepository = productRepository;
         }
 
@@ -49,7 +53,7 @@ namespace VendingMachine.Services.Application
                     // Validate new product creation
                     if (dbProduct == null)
                     {
-                        response.Message = "Product could not be created. for more help contact or support";
+                        response.Message = "Product could not be created";
                     }
                     else
                     {
@@ -61,7 +65,6 @@ namespace VendingMachine.Services.Application
             catch(Exception)
             {
                 // TODO: CREATE LOG
-                response.Success = false;
             }
 
             return response;
@@ -105,33 +108,6 @@ namespace VendingMachine.Services.Application
             catch (Exception)
             {
                 // TODO: CREATE LOG
-                response.Success = false;
-            }
-
-            return response;
-        }
-
-        public async Task<BaseResponse<AppModels.Product>> GetProductAsync(int productId)
-        {
-            BaseResponse<AppModels.Product> response = new();
-
-            try
-            {
-                var dbProduct = await _productRepository.GetProductAsync(productId);
-                if(dbProduct == null)
-                {
-                    response.Message = "Invalid Product Id";
-                }
-                else
-                {
-                    response.Data = _mapper.Map<DomainModels.Product, AppModels.Product>(dbProduct);
-                    response.Success = true;
-                }
-            }
-            catch (Exception)
-            {
-                // TODO: CREATE LOG
-                response.Success = false;
             }
 
             return response;
@@ -165,7 +141,6 @@ namespace VendingMachine.Services.Application
             catch(Exception)
             {
                  // TODO: CREATE LOG
-                response.Success = false;
             }
 
             return response;
@@ -199,7 +174,6 @@ namespace VendingMachine.Services.Application
             catch(Exception)
             {
                 // TODO: CREATE LOG
-                response.Success = false;
             }
 
             return response;
@@ -234,6 +208,13 @@ namespace VendingMachine.Services.Application
             if (product.Cost <= 0)
             {
                 response.Message = "Cost has not been provided";
+                return response;
+            }
+
+            var validCoins = _configuration.GetValue<string>("ValidCoins").Split(",").Select(Int32.Parse).ToList();
+            if (!validCoins.Contains(product.Cost))
+            {
+                response.Message = "Invalid cost detected";
                 return response;
             }
 

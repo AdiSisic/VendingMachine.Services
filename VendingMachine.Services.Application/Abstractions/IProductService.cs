@@ -15,13 +15,6 @@ namespace VendingMachine.Services.Application.Abstractions
         Task<BaseResponse<Product>> CreateProductAsync(Product product);
 
         /// <summary>
-        /// Get product by Product Id
-        /// </summary>
-        /// <param name="productId">Product ID</param>
-        /// <returns></returns>
-        Task<BaseResponse<Product>> GetProductAsync(int productId);
-
-        /// <summary>
         /// Delete product by Product Id
         /// </summary>
         /// <param name="productId">Product Id</param>

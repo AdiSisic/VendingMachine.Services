@@ -40,17 +40,23 @@ namespace VendingMachine.Services.Infrastructure
 
         public async Task<User> GetUserAsync(string username)
         {
-            return await _context.Users.SingleOrDefaultAsync(x => x.Username == username);
+            return await _context.Users.FirstOrDefaultAsync(x => x.Username == username);
         }
 
         public async Task<User> GetUserAsync(int userId)
         {
-            return await _context.Users.SingleOrDefaultAsync(x => x.Id == userId);
+            return await _context.Users.FirstOrDefaultAsync(x => x.Id == userId);
         }
 
         public async Task DeleteUserAsync(User user)
         {
             _context.Users.Remove(user);
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task UpdateUserAsync(User user)
+        {
+            _context.Users.Update(user);
             await _context.SaveChangesAsync();
         }
 
