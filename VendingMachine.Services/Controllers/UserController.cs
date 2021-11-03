@@ -83,23 +83,34 @@ namespace VendingMachine.Services.Controllers
         }
 
         /// <summary>
+        /// Reset user deposit
+        /// </summary>
+        /// <returns></returns>
+        [HttpGet, Route("resetDeposit", Name = "ResetDeposit"), JwtAuthorization]
+        public async Task<BaseResponse<bool>> ResetDeposit()
+        {
+            int userId = GetUserIdFromClaim();
+            return await _userService.ResetDeposit(userId);
+        }
+
+        /// <summary>
         /// Purchase product
         /// </summary>
         /// <param name="productId">ProductId</param>
+        /// <param name="count">Number of items to purchase</param>
         /// <returns></returns>
-        [HttpGet, Route("purchase/{productId}")]
-        public async Task<BaseResponse<bool>> Purchase([FromRoute]int productId)
+        [HttpGet, Route("purchase/{productId}/{count}"), JwtAuthorization]
+        public async Task<BaseResponse<BuyProductsResponse>> Purchase([FromRoute]int productId, [FromRoute] int count)
         {
-            if(productId <= 0)
+            if(productId <= 0 || count <= 0)
             {
-                return new BaseResponse<bool>() { Message = "Bad Request" };
+                return new BaseResponse<BuyProductsResponse>() { Message = "Bad Request" };
             }
 
             int userId = GetUserIdFromClaim();
 
-            return await _userService.PurchaseAsync(userId, productId);
+            return await _userService.PurchaseAsync(userId, productId, count);
         }
-
 
         #region << Private Methods >>
 

@@ -14,6 +14,13 @@ namespace VendingMachine.Services.Application.Abstractions
         Task<BaseResponse<bool>> RegisterAsync(User user);
 
         /// <summary>
+        /// Update existing user
+        /// </summary>
+        /// <param name="user">User object</param>
+        /// <returns></returns>
+        Task<BaseResponse<bool>> UpdateUserAsync(User user);
+
+        /// <summary>
         /// Login existing user
         /// </summary>
         /// <param name="username">Username</param>

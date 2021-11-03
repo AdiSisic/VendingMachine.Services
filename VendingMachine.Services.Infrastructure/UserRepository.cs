@@ -43,9 +43,12 @@ namespace VendingMachine.Services.Infrastructure
             return await _context.Users.FirstOrDefaultAsync(x => x.Username == username);
         }
 
-        public async Task<User> GetUserAsync(int userId)
+        public async Task<User> GetUserAsync(int userId, bool tracking = true)
         {
-            return await _context.Users.FirstOrDefaultAsync(x => x.Id == userId);
+            if(tracking)
+                return await _context.Users.FirstOrDefaultAsync(x => x.Id == userId);
+            else
+                return await _context.Users.AsNoTracking().FirstOrDefaultAsync(x => x.Id == userId);
         }
 
         public async Task DeleteUserAsync(User user)

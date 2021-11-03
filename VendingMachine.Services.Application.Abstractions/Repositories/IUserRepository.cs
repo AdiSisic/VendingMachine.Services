@@ -30,8 +30,9 @@ namespace VendingMachine.Services.Application.Abstractions.Repositories
         /// Get user by user Id
         /// </summary>
         /// <param name="userId">User Id</param>
+        /// <param name="tracking">Check if tracking needed</param>
         /// <returns></returns>
-        Task<User> GetUserAsync(int userId);
+        Task<User> GetUserAsync(int userId, bool tracking = true);
 
         /// <summary>
         /// Delete provided user

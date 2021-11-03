@@ -3,7 +3,7 @@ using VendingMachine.Services.Api.Enums;
 
 namespace VendingMachine.Services.Api.User.Request
 {
-    public class CreateMemberRequest
+    public class ManipulateMemberRequest
     {
         [Required]
         public string Username { get; set; }

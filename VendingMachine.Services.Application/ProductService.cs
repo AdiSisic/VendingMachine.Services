@@ -1,9 +1,6 @@
 ﻿using AutoMapper;
-using Microsoft.Extensions.Configuration;
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using VendingMachine.Services.Api.Base;
 using VendingMachine.Services.Application.Abstractions;
@@ -19,17 +16,15 @@ namespace VendingMachine.Services.Application
         #region << Fields >>
 
         private readonly IMapper _mapper;
-        private readonly IConfiguration _configuration;
         private readonly IProductRepository _productRepository;
 
         #endregion << Fields >>
 
         #region << Constructors >>
 
-        public ProductService(IMapper mapper, IConfiguration configuration, IProductRepository productRepository)
+        public ProductService(IMapper mapper, IProductRepository productRepository)
         {
             _mapper = mapper;
-            _configuration = configuration;
             _productRepository = productRepository;
         }
 
@@ -39,12 +34,12 @@ namespace VendingMachine.Services.Application
 
         public async Task<BaseResponse<AppModels.Product>> CreateProductAsync(AppModels.Product product)
         {
-            BaseResponse<AppModels.Product> response = new();
+            BaseResponse<AppModels.Product> baseResponse = new();
 
             try
             {
-                response = await CreateProductValidationAsync(product);
-                if (String.IsNullOrWhiteSpace(response.Message))
+                baseResponse = await CreateProductValidationAsync(product);
+                if (String.IsNullOrWhiteSpace(baseResponse.Message))
                 {
                     // Add new product
                     var newProduct = _mapper.Map<AppModels.Product, Domain.Product>(product);
@@ -53,69 +48,69 @@ namespace VendingMachine.Services.Application
                     // Validate new product creation
                     if (dbProduct == null)
                     {
-                        response.Message = "Product could not be created";
+                        baseResponse.Message = "Product could not be created";
                     }
                     else
                     {
-                        response.Data = _mapper.Map<DomainModels.Product, AppModels.Product>(dbProduct);
-                        response.Success = true;
+                        baseResponse.Data = _mapper.Map<DomainModels.Product, AppModels.Product>(dbProduct);
+                        baseResponse.Success = true;
                     }
                 }
             }
             catch(Exception)
             {
-                // TODO: CREATE LOG
+                baseResponse.Message = "Something went wrong. Please contact support for more details";
             }
 
-            return response;
+            return baseResponse;
         }
 
         public async Task<BaseResponse<IEnumerable<AppModels.Product>>> GetSellerProductsAsync(int sellerId)
         {
-            BaseResponse<IEnumerable<AppModels.Product>> response = new();
+            BaseResponse<IEnumerable<AppModels.Product>> baseResponse = new();
 
             if (sellerId <= 0)
             {
-                response.Message = "Invalid Seller Id";
+                baseResponse.Message = "Invalid Seller Id";
             }
             else
             {
                 try
                 {
                     var dbProducts = await _productRepository.GetSellerProductsAsync(sellerId);
-                    response.Data = _mapper.Map<IEnumerable<DomainModels.Product>, IEnumerable<AppModels.Product>>(dbProducts);
-                    response.Success = true;
+                    baseResponse.Data = _mapper.Map<IEnumerable<DomainModels.Product>, IEnumerable<AppModels.Product>>(dbProducts);
+                    baseResponse.Success = true;
                 }
                 catch (Exception)
                 {
-                    // TODO: CREATE LOG
+                    baseResponse.Message = "Something went wrong. Please contact support for more details";
                 }
             }
 
-            return response;
+            return baseResponse;
         }
 
         public async Task<BaseResponse<IEnumerable<AppModels.Product>>> GetProductsAsync()
         {
-            BaseResponse<IEnumerable<AppModels.Product>> response = new();
+            BaseResponse<IEnumerable<AppModels.Product>> baseResponse = new();
 
             try
             {
                 var dbProducts = await _productRepository.GetProductsAsync();
-                response.Data = _mapper.Map<IEnumerable<DomainModels.Product>, IEnumerable<AppModels.Product>>(dbProducts);
-                response.Success = true;
+                baseResponse.Data = _mapper.Map<IEnumerable<DomainModels.Product>, IEnumerable<AppModels.Product>>(dbProducts);
+                baseResponse.Success = true;
             }
             catch (Exception)
             {
-                // TODO: CREATE LOG
+                baseResponse.Message = "Something went wrong. Please contact support for more details";
             }
 
-            return response;
+            return baseResponse;
         }
 
         public async Task<BaseResponse<bool>> DeleteProductAsync(int productId, int userId)
         {
-            BaseResponse<bool> response = new();
+            BaseResponse<bool> baseResponse = new();
 
             try
             {
@@ -123,32 +118,32 @@ namespace VendingMachine.Services.Application
 
                 if (dbProduct == null)
                 {
-                    response.Message = "Invalid Product Id";
+                    baseResponse.Message = "Invalid Product Id";
                 }
                 else if(dbProduct.SellerId != userId)
                 {
-                    response.Message = "Unauthorized delete";
+                    baseResponse.Message = "Unauthorized delete";
                 }
                 else
                 {
                     await _productRepository.DeleteProductAsync(dbProduct);
 
-                    response.Data = true;
-                    response.Success = true;
+                    baseResponse.Data = true;
+                    baseResponse.Success = true;
                 }
 
             }
             catch(Exception)
             {
-                 // TODO: CREATE LOG
+                baseResponse.Message = "Something went wrong. Please contact support for more details";
             }
 
-            return response;
+            return baseResponse;
         }
 
         public async Task<BaseResponse<bool>> UpdateProductAsync(AppModels.Product product)
         {
-            BaseResponse<bool> response = new();
+            BaseResponse<bool> baseResponse = new();
 
             try
             {
@@ -156,27 +151,27 @@ namespace VendingMachine.Services.Application
 
                 if(dbProduct == null)
                 {
-                    response.Message = "Invalid Product Id";
+                    baseResponse.Message = "Invalid Product Id";
                 }
                 else if(dbProduct.SellerId != product.SellerId)
                 {
-                    response.Message = "Unauthorized update";
+                    baseResponse.Message = "Unauthorized update";
                 }
                 else
                 {
                     _mapper.Map(product, dbProduct);
                     await _productRepository.UpdateProductAsync(dbProduct);
 
-                    response.Data = true;
-                    response.Success = true;
+                    baseResponse.Data = true;
+                    baseResponse.Success = true;
                 }
             }
             catch(Exception)
             {
-                // TODO: CREATE LOG
+                baseResponse.Message = "Something went wrong. Please contact support for more details";
             }
 
-            return response;
+            return baseResponse;
         }
 
         #endregion << Public Methods >>
@@ -208,13 +203,6 @@ namespace VendingMachine.Services.Application
             if (product.Cost <= 0)
             {
                 response.Message = "Cost has not been provided";
-                return response;
-            }
-
-            var validCoins = _configuration.GetValue<string>("ValidCoins").Split(",").Select(Int32.Parse).ToList();
-            if (!validCoins.Contains(product.Cost))
-            {
-                response.Message = "Invalid cost detected";
                 return response;
             }
 

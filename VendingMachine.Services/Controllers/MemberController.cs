@@ -67,14 +67,14 @@ namespace VendingMachine.Services.Controllers
         /// <param name="request">NewMember Request</param>
         /// <returns></returns>
         [HttpPost, Route("createMember", Name = "CreateMember")]
-        public async Task<BaseResponse<bool>> CreateMember([FromBody] CreateMemberRequest request)
+        public async Task<BaseResponse<bool>> CreateMember([FromBody] ManipulateMemberRequest request)
         {
             if (!ModelState.IsValid)
             {
                 return new BaseResponse<bool>() { Message = "Bad Request" };
             }
 
-            var user = _mapper.Map<CreateMemberRequest, User>(request);
+            var user = _mapper.Map<ManipulateMemberRequest, User>(request);
             return await _authenticationService.RegisterAsync(user);
         }
 
@@ -94,6 +94,24 @@ namespace VendingMachine.Services.Controllers
             return await _authenticationService.DeleteUserAsync(memberId);
         }
 
-        //TODO: IMPLEMENT UPDATE USER
+        /// <summary>
+        /// Update user
+        /// </summary>
+        /// <param name="request">Request data</param>
+        /// <param name="userId">User ID</param>
+        /// <returns></returns>
+        [HttpPut, Route("updateMember/{userId}", Name = "UpdateMember"), JwtAuthorization]
+        public async Task<BaseResponse<bool>> UpdateMember([FromBody] ManipulateMemberRequest request, [FromRoute] int userId)
+        {
+            if (!ModelState.IsValid)
+            {
+                return new BaseResponse<bool>() { Message = "Bad Request" };
+            }
+
+            var user = _mapper.Map<ManipulateMemberRequest, User>(request);
+            user.Id = userId;
+
+            return await _authenticationService.UpdateUserAsync(user);
+        }
     }
 }

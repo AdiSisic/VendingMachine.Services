@@ -10,7 +10,7 @@ namespace VendingMachine.Services.Mapper
     {
         public UserProfile()
         {
-            CreateMap<CreateMemberRequest, User>();
+            CreateMap<ManipulateMemberRequest, User>();
             CreateMap<User, LoginMemberResponse>();
         }
     }

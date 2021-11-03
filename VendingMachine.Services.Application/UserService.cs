@@ -5,6 +5,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using VendingMachine.Services.Api.Base;
+using VendingMachine.Services.Api.Enums;
+using VendingMachine.Services.Api.User.Response;
 using VendingMachine.Services.Application.Abstractions;
 using VendingMachine.Services.Application.Abstractions.Repositories;
 
@@ -73,26 +75,29 @@ namespace VendingMachine.Services.Application
                 if (!validCoins.Contains(coin))
                 {
                     baseResponse.Message = "Invalid coin detected";
+                    return baseResponse;
                 }
-                else
+
+                var dbUser = await _userRepository.GetUserAsync(userId);
+                if (dbUser == null)
                 {
-                    var dbUser = await _userRepository.GetUserAsync(userId);
-                    if (dbUser == null)
-                    {
-                        baseResponse.Message = "Invalid User Id";
-                    }
-                    else
-                    {
-                        dbUser.Deposit += coin;
-                        await _userRepository.UpdateUserAsync(dbUser);
-                        baseResponse.Data = true;
-                        baseResponse.Success = true;
-                    }
+                    baseResponse.Message = "Invalid User Id";
+                    return baseResponse;
                 }
+
+                if(dbUser.RoleId != (int)RoleType.Buyer)
+                {
+                    baseResponse.Message = "Only buyers can deposit money";
+                }
+
+                dbUser.Deposit += coin;
+                await _userRepository.UpdateUserAsync(dbUser);
+                baseResponse.Data = true;
+                baseResponse.Success = true;
             }
             catch (Exception)
             {
-                //TODO:Create Log
+                baseResponse.Message = "Something went wrong. Please contact support for more details";
             }
 
             return baseResponse;
@@ -108,24 +113,23 @@ namespace VendingMachine.Services.Application
                 if (dbUser == null)
                 {
                     baseResponse.Message = "Invalid User Id";
+                    return baseResponse;
                 }
-                else
-                {
-                    baseResponse.Data = dbUser.Deposit;
-                    baseResponse.Success = true;
-                }
-            }
-            catch(Exception)
-            {
 
+                baseResponse.Data = dbUser.Deposit;
+                baseResponse.Success = true;
+            }
+            catch (Exception)
+            {
+                baseResponse.Message = "Something went wrong. Please contact support for more details";
             }
 
             return baseResponse;
         }
 
-        public async Task<BaseResponse<bool>> PurchaseAsync(int userId, int productId)
+        public async Task<BaseResponse<BuyProductsResponse>> PurchaseAsync(int userId, int productId, int count)
         {
-            BaseResponse<bool> baseResponse = new();
+            BaseResponse<BuyProductsResponse> baseResponse = new();
 
             try
             {
@@ -145,29 +149,97 @@ namespace VendingMachine.Services.Application
                     return baseResponse;
                 }
 
-                // Regardless of UI, we need to make sure that user has enough money to make purchase
-                if (dbUser.Deposit < dbProduct.Cost)
+                if (dbUser.RoleId != (int)RoleType.Buyer)
                 {
-                    baseResponse.Message = "Deposit to low";
+                    baseResponse.Message = "Only buyers can deposit money";
                     return baseResponse;
                 }
 
-                dbProduct.Amount--;
-                dbUser.Deposit -= dbProduct.Cost;
+                if (dbProduct.Amount < count)
+                {
+                    baseResponse.Message = $"Only {dbProduct.Amount} products are available";
+                    return baseResponse;
+                }
+
+                // Regardless of UI, we need to make sure that user has enough money to make purchase
+                if (dbUser.Deposit < (dbProduct.Cost * count))
+                {
+                    baseResponse.Message = "Deposit to low to buy a product";
+                    return baseResponse;
+                }
+
+                dbProduct.Amount -= count;
+                dbUser.Deposit -= dbProduct.Cost * count;
 
                 await _productRepository.UpdateProductAsync(dbProduct);
                 await _userRepository.UpdateUserAsync(dbUser);
+
+                baseResponse.Data = new BuyProductsResponse();
+                baseResponse.Data.Amount = count;
+                baseResponse.Data.MoneyLeft = dbUser.Deposit;
+                baseResponse.Data.ProductId = productId;
+                baseResponse.Data.Spent = dbProduct.Cost * count;
+                baseResponse.Data.Change = CalculateChange(dbUser.Deposit);
+                baseResponse.Success = true;
+            }
+            catch (Exception)
+            {
+                baseResponse.Message = "Something went wrong. Please contact support for more details";
+            }
+
+            return baseResponse;
+        }
+
+        public async Task<BaseResponse<bool>> ResetDeposit(int userId)
+        {
+            BaseResponse<bool> baseResponse = new();
+
+            try
+            {
+                var dbUser = await _userRepository.GetUserAsync(userId);
+                if (dbUser == null)
+                {
+                    baseResponse.Message = "Invalid user";
+                    return baseResponse;
+                }
+
+                dbUser.Deposit = 0;
+                await _userRepository.UpdateUserAsync(dbUser);
+
                 baseResponse.Data = true;
                 baseResponse.Success = true;
             }
             catch (Exception)
             {
-
+                baseResponse.Message = "Something went wrong. Please contact support for more details";
             }
 
             return baseResponse;
         }
 
         #endregion << Public Methods >>
+
+        #region << Private Methods >>
+
+        private List<Change> CalculateChange(int userDeposit)
+        {
+            List<Change> change = new();
+            List<int> validCoins = _configuration.GetValue<string>("ValidCoins").Split(",").Select(Int32.Parse).OrderByDescending(x => x).ToList();
+
+            foreach (int coin in validCoins)
+            {
+                int amount = userDeposit / coin;
+                if (amount > 0)
+                {
+                    change.Add(new Change() { Coin = coin, Amount = amount });
+                }
+
+                userDeposit -= amount * coin;
+            }
+
+            return change;
+        }
+
+        #endregion << Private Methods >>
     }
 }

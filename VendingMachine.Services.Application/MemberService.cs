@@ -35,12 +35,13 @@ namespace VendingMachine.Services.Application
 
         public async Task<BaseResponse<bool>> RegisterAsync(AppModels.User user)
         {
-            BaseResponse<bool> response = new();
+            BaseResponse<bool> baseResponse = new();
 
             try
             {
-                response = await RegisterValidationAsync(user);
-                if (string.IsNullOrWhiteSpace(response.Message))
+                baseResponse = await MemberManipulationValidationAsync(user);
+
+                if (string.IsNullOrWhiteSpace(baseResponse.Message))
                 {
                     // CREATE NEW USER ONLY IF VALIDATION HAS PASSED
                     var newUser = _mapper.Map<AppModels.User, DomainModels.User>(user);
@@ -48,50 +49,77 @@ namespace VendingMachine.Services.Application
 
                     await _userRepository.CreateUserAsync(newUser);
 
-                    response.Data = newUser.Id != 1;
-                    response.Success = true;
+                    baseResponse.Data = newUser.Id != 1;
+                    baseResponse.Success = true;
                 }
             }
             catch (Exception)
             {
-                // TODO: CREATE LOG
+                baseResponse.Message = "Something went wrong. Please contact support for more details";
             }
 
-            return response;
+            return baseResponse;
+        }
+
+        public async Task<BaseResponse<bool>> UpdateUserAsync(AppModels.User user)
+        {
+            BaseResponse<bool> baseResponse = new();
+
+            try
+            {
+                baseResponse = await MemberManipulationValidationAsync(user);
+                if(string.IsNullOrWhiteSpace(baseResponse.Message))
+                {
+                    var dbUser = await _userRepository.GetUserAsync(user.Id, false);
+                    var mappedUser = _mapper.Map<AppModels.User, DomainModels.User>(user);
+                    mappedUser.Deposit = dbUser.Deposit;
+                    mappedUser.Password = HashString(user.Password);
+
+                    await _userRepository.UpdateUserAsync(mappedUser);
+                    baseResponse.Data = true;
+                    baseResponse.Success = true;
+                }
+            }
+            catch (Exception)
+            {
+                baseResponse.Message = "Something went wrong. Please contact support for more details";
+            }
+
+            return baseResponse;
         }
 
         public async Task<BaseResponse<AppModels.User>> LoginAsync(string username, string password)
         {
-            BaseResponse<AppModels.User> response = new();
+            BaseResponse<AppModels.User> baseResponse = new();
 
             try
             {
-                response = LoginValidation(username, password);
-                if (String.IsNullOrWhiteSpace(response.Message))
+                baseResponse = LoginValidation(username, password);
+                if (String.IsNullOrWhiteSpace(baseResponse.Message))
                 {
                     var dbUser = await _userRepository.GetUserAsync(username);
                     if (dbUser == null || dbUser.Password != HashString(password))
                     {
-                        response.Message = "Invalid Username or Password";
+                        baseResponse.Message = "Invalid Username or Password";
                     }
                     else
                     {
-                        response.Data = _mapper.Map<DomainModels.User, AppModels.User>(dbUser);
-                        response.Success = true;
+                        baseResponse.Data = _mapper.Map<DomainModels.User, AppModels.User>(dbUser);
+                        baseResponse.Success = true;
                     }
                 }
             }
             catch (Exception)
             {
-                //TODO: CREATE LOG
+                baseResponse.Message = "Something went wrong. Please contact support for more details";
             }
 
-            return response;
+            return baseResponse;
         }
 
         public async Task<BaseResponse<bool>> DeleteUserAsync(int userId)
         {
-            BaseResponse<bool> response = new();
+            BaseResponse<bool> baseResponse = new();
 
             try
             {
@@ -99,22 +127,20 @@ namespace VendingMachine.Services.Application
 
                 if (dbUser == null)
                 {
-                    response.Message = "Invalid user Id";
+                    baseResponse.Message = "Invalid user Id";
+                    return baseResponse;
                 }
-                else
-                {
-                    await _userRepository.DeleteUserAsync(dbUser);
+                await _userRepository.DeleteUserAsync(dbUser);
 
-                    response.Data = true;
-                    response.Success = true;
-                }
+                baseResponse.Data = true;
+                baseResponse.Success = true;
             }
             catch (Exception)
             {
-                // TODO: CREATE LOG
+                baseResponse.Message = "Something went wrong. Please contact support for more details";
             }
 
-            return response;
+            return baseResponse;
         }
 
         #endregion << Public Methods >>
@@ -127,7 +153,7 @@ namespace VendingMachine.Services.Application
                                .Replace("-", string.Empty);
         }
 
-        private async Task<BaseResponse<bool>> RegisterValidationAsync(AppModels.User user)
+        private async Task<BaseResponse<bool>> MemberManipulationValidationAsync(AppModels.User user, bool skipDbUserCheck = false)
         {
             BaseResponse<bool> response = new();
 
@@ -145,18 +171,21 @@ namespace VendingMachine.Services.Application
 
             if (string.IsNullOrWhiteSpace(user?.Password))
             {
-                response.Message = "Username has not been provided";
+                response.Message = "Password has not been provided";
                 return response;
             }
 
-
-            // Check if user exists
-            bool usernameTaken = await _userRepository.UserExitsAsync(user.Username);
-            if (usernameTaken)
+            // Check if different user exists
+            var dbUser = await _userRepository.GetUserAsync(user.Username);
+            if (dbUser != null)
             {
-                // TODO: CREATE LOG
-                response.Message = "Username is already taken";
-                return response;
+                if (user.Id != dbUser.Id)
+                {
+                    response.Message = "Username is already taken";
+                    return response;
+                }
+
+                user.Deposit = dbUser.Deposit;
             }
 
             return response;
