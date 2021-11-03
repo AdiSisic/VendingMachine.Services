@@ -42,27 +42,27 @@ namespace VendingMachine.Services.Application
 
         public async Task<BaseResponse<AppModels.User>> GetUserAsync(int userId)
         {
-            BaseResponse<AppModels.User> response = new();
+            BaseResponse<AppModels.User> baseResponse = new();
 
             try
             {
                 var dbUser = await _userRepository.GetUserAsync(userId);
                 if (dbUser == null)
                 {
-                    response.Message = "Invalid User Id";
+                    baseResponse.Message = "Invalid User Id";
                 }
                 else
                 {
-                    response.Data = _mapper.Map<DomainModels.User, AppModels.User>(dbUser);
-                    response.Success = true;
+                    baseResponse.Data = _mapper.Map<DomainModels.User, AppModels.User>(dbUser);
+                    baseResponse.Success = true;
                 }
             }
             catch (Exception)
             {
-                //TODO: CREATE LOG
+                baseResponse.Message = "Something went wrong. Please contact support for more details";
             }
 
-            return response;
+            return baseResponse;
         }
 
         public async Task<BaseResponse<bool>> DepositAsync(int coin, int userId)

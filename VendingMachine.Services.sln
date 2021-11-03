@@ -22,6 +22,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		.gitignore = .gitignore
 	EndProjectSection
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{C888390A-46F0-4846-AB0F-D8B35A179411}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VendingMachine.Services.Application.Tests", "VendingMachine.Services.Application.Tests\VendingMachine.Services.Application.Tests.csproj", "{C4F8BE94-BCCA-4916-93FF-143D4176203F}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -58,9 +62,16 @@ Global
 		{BB795AE7-965C-4F29-B7CF-FD63FAA3C32C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BB795AE7-965C-4F29-B7CF-FD63FAA3C32C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{BB795AE7-965C-4F29-B7CF-FD63FAA3C32C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C4F8BE94-BCCA-4916-93FF-143D4176203F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C4F8BE94-BCCA-4916-93FF-143D4176203F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C4F8BE94-BCCA-4916-93FF-143D4176203F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C4F8BE94-BCCA-4916-93FF-143D4176203F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{C4F8BE94-BCCA-4916-93FF-143D4176203F} = {C888390A-46F0-4846-AB0F-D8B35A179411}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {4433BD40-2144-40C6-A02B-107154ECA741}

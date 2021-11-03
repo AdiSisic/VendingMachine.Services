@@ -1,5 +1,3 @@
-using AutoMapper;
-using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -13,10 +11,8 @@ using System.Text;
 using VendingMachine.Services.Application;
 using VendingMachine.Services.Application.Abstractions;
 using VendingMachine.Services.Application.Abstractions.Repositories;
-using VendingMachine.Services.Application.Mappers;
 using VendingMachine.Services.Infrastructure;
 using VendingMachine.Services.Infrastructure.EFDbContext;
-using VendingMachine.Services.Mapper;
 
 namespace VendingMachine.Services
 {
@@ -36,7 +32,7 @@ namespace VendingMachine.Services
             {
                 options.AddPolicy("AllowedOrigins", builder =>
                 {
-                    builder.WithOrigins("http://localhost:4200", "http://localhost:4200/").AllowAnyHeader().AllowAnyMethod().AllowCredentials();
+                    builder.WithOrigins(Configuration.GetValue<string>("AllowedOrigins").Split(",")).AllowAnyHeader().AllowAnyMethod().AllowCredentials();
                 });
             });
 
